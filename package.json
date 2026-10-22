@@ -1,0 +1,25 @@
+{
+  "name": "beatsync-p2p-javier",
+  "packageManager": "bun@1.2.13",
+  "scripts": {
+    "dev": "bun run --filter client dev",
+    "build": "bun run --filter client build && bun run --filter client pages:404",
+    "preview": "bun run --filter client preview",
+    "check": "bun run --filter client typecheck",
+    "test": "bun run --filter client test",
+    "format": "prettier --write apps/client/src packages/shared/types/p2p.ts",
+    "prepare": "lefthook install"
+  },
+  "workspaces": [
+    "apps/client",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/bun": "latest",
+    "lefthook": "^2.1.2",
+    "prettier": "^3.8.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
