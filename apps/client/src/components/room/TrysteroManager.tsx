@@ -15,7 +15,9 @@ import { useRoomStore } from "@/store/room";
 import { toP2PTrackUrl } from "@/p2p/audio/urls";
 import { getProbeStats, type NTPMeasurement } from "@/utils/ntp";
 import { ClientActionEnum, WSResponseType } from "@beatsync/shared";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { LocalConnectionHelp } from "./LocalConnectionHelp";
 
 interface TrysteroManagerProps {
   roomId: string;
@@ -24,6 +26,11 @@ interface TrysteroManagerProps {
 
 export const TrysteroManager = ({ roomId, username }: TrysteroManagerProps) => {
   const { clientId } = useClientId();
+  const [connectionHelpOpen, setConnectionHelpOpen] = useState(false);
+  const peerCount = useP2PConnectionStore((state) => state.connectedPeerIds.length);
+  useEffect(() => {
+    if (peerCount > 1) toast.dismiss("local-peer-connection");
+  }, [peerCount]);
   const isLoadingRoom = useRoomStore((state) => state.isLoadingRoom);
 
   const trysteroRoomId = toTrysteroRoomId(roomId);
@@ -155,14 +162,17 @@ export const TrysteroManager = ({ roomId, username }: TrysteroManagerProps) => {
       activeRoom = joinRoom(getTrysteroConfig(), trysteroRoomId, {
         onJoinError: ({ error }) => {
           console.warn("[P2P] Local peer connection failed", error);
+          if (useP2PConnectionStore.getState().connectedPeerIds.length > 1) return;
           const message = "Could not reach another device on the local network.";
           useP2PConnectionStore.setState({ connectionError: message });
           if (!reportedConnectionFailure) {
             reportedConnectionFailure = true;
             toast.error(message, {
               id: "local-peer-connection",
-              description: "Use the same Wi-Fi, allow local network access for your browser, and check that the network allows devices to communicate.",
-              duration: 12000,
+              description:
+                "Use the same Wi-Fi, allow local network access for your browser, and check that the network allows devices to communicate.",
+              duration: Infinity,
+              action: { label: "Connection help", onClick: () => setConnectionHelpOpen(true) },
             });
           }
         },
@@ -218,5 +228,5 @@ export const TrysteroManager = ({ roomId, username }: TrysteroManagerProps) => {
     };
   }, []);
 
-  return null;
+  return <LocalConnectionHelp open={connectionHelpOpen} onOpenChange={setConnectionHelpOpen} />;
 };

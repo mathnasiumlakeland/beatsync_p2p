@@ -21,7 +21,7 @@ This is a local-reachability restriction, **not an SSID check or authentication 
 
 The page and public Nostr discovery relays require internet access. The relays exchange encrypted WebRTC setup messages, not music or chat; app data travels over the peer connection. No backend, database, music storage account, API key, or subscription is required. Relay availability and policy are outside this project's control. The three configured relay endpoints were verified to accept the discovery protocol during implementation; their future availability is not guaranteed. Relay URLs are centralized in `apps/client/src/p2p/config.ts`.
 
-Guest Wi-Fi/client isolation, browser local-network restrictions, firewalls, and disabled WebRTC can prevent connections. A browser may require you to allow local network access. Safari and managed browsers can restrict local ICE candidates; Chrome is the first troubleshooting choice. The page does not request microphone permission.
+Guest Wi-Fi/client isolation, browser local-network restrictions, firewalls, and disabled WebRTC can prevent connections. A browser may require you to allow local network access. Safari and managed browsers can restrict local ICE candidates; Chrome is the first troubleshooting choice. The page never requests microphone permission automatically. After a failed connection, **Connection help** offers an optional, explicitly labelled microphone permission retry. It immediately stops every capture track without recording or sending microphone audio, then reloads. Some browsers expose direct private host addresses after permission, which can avoid blocked mDNS resolution. Permission may remain in the browser’s site settings until revoked. This is a compatibility attempt, not a workaround for Wi-Fi isolation; the local ICE filter and empty ICE-server list remain enforced.
 
 ## Features from your BeatSync frontend
 
@@ -100,7 +100,18 @@ A fresh host restores its own playable browser cache. Once connected, the active
 - Closing the original host elected the remaining browser, retained the three-track queue and two-track default playlist, and allowed playback to resume. A final solo reload restored all three cached files and the playlist with playback paused.
 - Desktop at 1440×900 and mobile at 390×844 use the original UI. The mobile document width stayed at 390 pixels; track selection in the playlist editor worked at that size.
 
-These are browser tests on one Mac. Physical phones, speaker latency, the actual Wi-Fi router, and mobile background behavior still need a room test. The site was published on October 22, 2026 at **https://javier.mathnasium.pro**, with a DNS-only CNAME to `mathnasiumlakeland.github.io` and HTTPS enforcement. The latest native-browser verification on this Mac did not establish a peer connection: signaling succeeded, but no usable remote local address was resolved. Treat cross-device playback as unverified until tested on the intended Wi-Fi; the app now reports local connection failures through its existing notifications.
+Those earlier tests ran on one Mac and do not establish physical-device compatibility.
+
+## Live verification (October 22, 2026)
+
+- Published under `mathnasiumlakeland/beatsync_p2p`, with the original frontend at **https://javier.mathnasium.pro**. GitHub Pages deployment succeeds, DNS checks pass, the certificate is valid, and HTTP redirects to enforced HTTPS.
+- The site and all 15 referenced build assets returned HTTP 200. Local audio upload, calibration, and single-browser playback were verified on the deployed site.
+- Current validation: type checks, **55 tests / 149 assertions**, and the static export pass. The new tests verify that the optional compatibility action stops all capture tracks before returning and handles denied/unavailable permission.
+- **Cross-device playback is not yet verified.** The user's iPhone Safari showed only one user. Native Chrome/Brave sessions on the Mac also failed to connect despite successful relay signaling.
+- An isolated native WebRTC test, without BeatSync or Trystero, reproduced Chrome's failure with mDNS hostnames. A localhost-only control transferred a test message successfully. Native Safari's same-page mDNS test connected. This isolates a Chrome local-name-resolution problem on this Mac, but does not establish the reason the physical devices cannot pair.
+- After a failed connection, the existing notification now offers **Connection help**, including a normal reload and an optional microphone-permission compatibility retry. The compatibility retry has not yet been approved/tested with real microphone access; do not describe it as a verified fix. No production loopback rewrite, STUN, TURN, or public candidate fallback was added.
+
+Physical speaker latency, the intended router, Safari pairing, and mobile background behavior still require a successful room test. The application intentionally retains its local-only restriction even when that means a connection cannot be established.
 
 ## Credits and license
 
