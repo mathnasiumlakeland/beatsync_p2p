@@ -208,8 +208,17 @@ export const TrysteroManager = ({ roomId, username }: TrysteroManagerProps) => {
       // The original player retries its pending scheduled play after decoding.
       // A second SYNC here would stop that playback and schedule it again.
     };
+    const onCacheUnavailable = () =>
+      toast.info(
+        "Browser storage is unavailable. Music will play for this session; keep a device with the original files connected.",
+        { duration: 10000 }
+      );
     window.addEventListener("p2p-track-received", onTrackReceived);
-    return () => window.removeEventListener("p2p-track-received", onTrackReceived);
+    window.addEventListener("p2p-audio-cache-unavailable", onCacheUnavailable);
+    return () => {
+      window.removeEventListener("p2p-track-received", onTrackReceived);
+      window.removeEventListener("p2p-audio-cache-unavailable", onCacheUnavailable);
+    };
   }, []);
 
   useEffect(() => {

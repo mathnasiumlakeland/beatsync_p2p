@@ -263,7 +263,8 @@ export const QueueSortableItem = ({
           <div className="min-w-0 flex-1">
             <div
               className={cn(
-                "font-medium text-sm truncate select-none",
+                "font-medium text-sm select-none",
+                isError ? "whitespace-normal break-words" : "truncate",
                 isSelected && !isLoading ? "text-primary-400" : "",
                 isError && "text-red-400",
                 isLoading && "opacity-60"
