@@ -2,7 +2,7 @@ import { IS_P2P_MODE } from "@/lib/p2p";
 import type { ClientDataType, PlaybackControlsPermissionsType } from "@beatsync/shared";
 import { NTP_CONSTANTS, PlaybackControlsPermissionsEnum } from "@beatsync/shared";
 
-export const P2P_DEFAULT_PLAYBACK_PERMISSIONS = PlaybackControlsPermissionsEnum.enum.ADMIN_ONLY;
+export const P2P_DEFAULT_PLAYBACK_PERMISSIONS = PlaybackControlsPermissionsEnum.enum.EVERYONE;
 export const P2P_NTP_MEASUREMENTS_REQUIRED = NTP_CONSTANTS.MAX_MEASUREMENTS;
 export function isP2PEqualPeerMode(): boolean {
   return false;

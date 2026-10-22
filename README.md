@@ -9,7 +9,7 @@ A static, single-room version of [Beatsync](https://github.com/mkieffer1107/beat
 3. The first browser becomes the host. Use **Upload audio** to select local audio files, then press Play. MP3 is recommended; each file must be under 64 MiB.
 4. Leave the host tab open. Other devices receive the current and next track, cache them in IndexedDB, and play against the host's synchronized clock. Share the QR code to open the same site.
 
-There are no accounts, passwords, or room-code entry steps. The original UI displays a single fixed room (`123456`). The first browser hosts the room and starts as its admin. The original **Everyone / Admins** switch and admin promotion controls are retained: permitted devices can add music and control playback, with every action routed through the elected host. Listeners can chat and adjust their own timing. If the host disappears, a remaining browser becomes the host and playback pauses. Press Play on the new host to resume. Tracks cached on another connected device remain available; files that existed only on the departed device must be added again.
+There are no accounts, passwords, or room-code entry steps. The original UI displays a single fixed room (`123456`). The first browser hosts the room. **Everyone who joins starts as an admin**, and playback permissions default to **Everyone**, so every device can upload music, change tracks, and control playback immediately. The original **Everyone / Admins** switch and admin controls are retained for later explicit changes, with every action routed through the elected host. Listeners can chat and adjust their own timing. If the host disappears, a remaining browser becomes the host and playback pauses. Press Play on the new host to resume. Tracks cached on another connected device remain available; files that existed only on the departed device must be added again.
 
 Native speakers work best. Bluetooth, background tabs, screen locking, and different speaker hardware can add delay. The timing nudge controls compensate for audible differences. Browser scheduling cannot guarantee identical physical speaker latency.
 
@@ -34,7 +34,7 @@ The original components and styles are the base, not a redesigned P2P screen. In
 | Search downloaded music | Retained from your repo; searches tracks in the queue in the browser. |
 | Library, playlists, track selection/order, rename/edit/delete | Retained; room metadata persists in browser storage and is shared with listeners. |
 | Default playlist | Any local playlist can be made default and loaded into an empty queue. |
-| Everyone/Admins and admin promotion | Retained; the elected host remains an admin. |
+| Everyone/Admins and admin promotion | Everyone joins as an admin by default; later explicit admin changes remain available. |
 | QR sharing, chat, volume, nudge, metronome, low-pass and spatial controls | Retained in their original positions, including Session/Music/Fun mobile tabs. |
 | YouTube video/playlist download and refresh | Requires the original downloader server. The original drawer remains, with disabled import controls and a clear explanation. Upload downloaded audio files instead. |
 | Server-side playlist storage | Replaced with browser persistence. Keep at least one device containing the needed files connected. |
@@ -81,7 +81,7 @@ The workflow `.github/workflows/deploy-pages.yml` follows the neighboring Mathna
 
 ## Implementation
 
-Trystero is pinned to **0.26.0**, which fixes upstream idle-offer and quick-rejoin failures ([release notes](https://github.com/dmotz/trystero/releases/tag/0.26.0)). The local protocol uses a separate `v3` room namespace so older clients cannot mix incompatible action formats. Audio transfers require approval of the sender, request ID, and declared byte count before receiving their payload. Reload every open tab when updating the site.
+Trystero is pinned to **0.26.0**, which fixes upstream idle-offer and quick-rejoin failures ([release notes](https://github.com/dmotz/trystero/releases/tag/0.26.0)). The local protocol uses a separate `v4` room namespace so tabs with the old host-only defaults cannot control the new room. Reload all open devices after this update. Old cached permissions migrate once to Everyone without deleting saved tracks or playlists. Audio transfers require approval of the sender, request ID, and declared byte count before receiving their payload. Reload every open tab when updating the site.
 
 - `apps/client/src/p2p/localNetwork.ts`: enforced local ICE policy.
 - `apps/client/src/store/p2pConnection.ts`: transport-bound peer identity, host continuity, message authority, and clock routing.
@@ -106,10 +106,10 @@ Those earlier tests ran on one Mac and do not establish physical-device compatib
 
 - Published under `mathnasiumlakeland/beatsync_p2p`, with the original frontend at **https://javier.mathnasium.pro**. GitHub Pages deployment succeeds, DNS checks pass, the certificate is valid, and HTTP redirects to enforced HTTPS.
 - The site and all 15 referenced build assets returned HTTP 200. Local audio upload, calibration, and single-browser playback were verified on the deployed site.
-- Current validation: type checks, **55 tests / 149 assertions**, and the static export pass. The new tests verify that the optional compatibility action stops all capture tracks before returning and handles denied/unavailable permission.
-- **Cross-device playback is not yet verified.** The user's iPhone Safari showed only one user. Native Chrome/Brave sessions on the Mac also failed to connect despite successful relay signaling.
+- Current validation: type checks, **57 tests / 155 assertions**, and the static export pass. The new tests verify that the optional compatibility action stops all capture tracks before returning and handles denied/unavailable permission.
+- **Physical-device connection now succeeds after the approved microphone compatibility retry on the Mac.** The live room showed four users, including the user-confirmed iPhone Safari `productive-cricket`. Playback across the iPhone and Mac is the remaining live check. Before the retry, the devices could not connect despite successful relay signaling.
 - An isolated native WebRTC test, without BeatSync or Trystero, reproduced Chrome's failure with mDNS hostnames. A localhost-only control transferred a test message successfully. Native Safari's same-page mDNS test connected. This isolates a Chrome local-name-resolution problem on this Mac, but does not establish the reason the physical devices cannot pair.
-- After a failed connection, the existing notification now offers **Connection help**, including a normal reload and an optional microphone-permission compatibility retry. The compatibility retry has not yet been approved/tested with real microphone access; do not describe it as a verified fix. No production loopback rewrite, STUN, TURN, or public candidate fallback was added.
+- After a failed connection, the existing notification now offers **Connection help**, including a normal reload and an optional microphone-permission compatibility retry. The user approved the microphone test and granted Chrome permission. The app stopped capture and reloaded, after which peers and the iPhone connected. This is verified for this test environment, not a guarantee for every router/browser. No production loopback rewrite, STUN, TURN, or public candidate fallback was added.
 
 Physical speaker latency, the intended router, Safari pairing, and mobile background behavior still require a successful room test. The application intentionally retains its local-only restriction even when that means a connection cannot be established.
 

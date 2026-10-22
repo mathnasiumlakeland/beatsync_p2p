@@ -84,9 +84,7 @@ export class P2PRoomCoordinator {
     serverTimeToExecute: 0,
     trackPositionSeconds: 0,
   };
-  private playbackControlsPermissions: PlaybackControlsPermissionsType = isP2PEqualPeerMode()
-    ? P2P_DEFAULT_PLAYBACK_PERMISSIONS
-    : "ADMIN_ONLY";
+  private playbackControlsPermissions: PlaybackControlsPermissionsType = P2P_DEFAULT_PLAYBACK_PERMISSIONS;
   private globalVolume = 0.5;
   private lowPassFreq: number = LOW_PASS_CONSTANTS.MAX_FREQ;
   private isMetronomeEnabled = false;
@@ -129,7 +127,8 @@ export class P2PRoomCoordinator {
       joinedAt: prev?.joinedAt ?? Date.now(),
       username: session.username,
       clientId: session.clientId,
-      isAdmin: session.peerId === this.authorityPeerId,
+      // Everyone who joins this local room starts as an admin. Existing explicit changes survive presence updates.
+      isAdmin: prev?.isAdmin ?? true,
       isCreator: session.isCreator,
       rtt: prev?.rtt ?? 0,
       compensationMs: prev?.compensationMs ?? 0,
@@ -185,7 +184,7 @@ export class P2PRoomCoordinator {
 
   exportSnapshot(): RoomCacheSnapshot {
     return {
-      version: 1,
+      version: 2,
       updatedAt: Date.now(),
       audioSources: [...this.audioSources],
       playlists: this.playlists,
@@ -211,7 +210,11 @@ export class P2PRoomCoordinator {
     this.isShuffled = snapshot.isShuffled ?? false;
     this.shuffleHistory = snapshot.shuffleHistory ?? [];
     this.playbackState = { ...snapshot.playbackState };
-    this.playbackControlsPermissions = coerceP2PPlaybackPermissions(snapshot.playbackControlsPermissions);
+    // Upgrade the old host-only default without discarding saved music or playlists.
+    this.playbackControlsPermissions =
+      snapshot.version < 2
+        ? P2P_DEFAULT_PLAYBACK_PERMISSIONS
+        : coerceP2PPlaybackPermissions(snapshot.playbackControlsPermissions);
     this.globalVolume = snapshot.globalVolume;
     this.lowPassFreq = snapshot.lowPassFreq;
     this.isMetronomeEnabled = snapshot.isMetronomeEnabled;

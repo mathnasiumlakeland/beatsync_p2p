@@ -7,7 +7,7 @@ export const TRYSTERO_APP_ID = "pro.mathnasium.javier.local-audio";
 export const SINGLE_ROOM_ID = "123456";
 
 /** Protocol segment in room id; bump when wire protocol breaks compat. */
-export const TRYSTERO_PROTOCOL_VERSION = "v3";
+export const TRYSTERO_PROTOCOL_VERSION = "v4";
 
 const ROOM_ID_PATTERN = /^pro\.mathnasium\.javier\.local-audio-v\d+-(\d{6})$/;
 

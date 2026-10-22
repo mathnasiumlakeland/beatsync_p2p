@@ -20,7 +20,7 @@ The exported site is `apps/client/out/`. The Pages workflow builds and deploys t
 - Root URL opens one fixed room. No room/password entry screen.
 - Local ICE policy is enforced in `apps/client/src/p2p/localNetwork.ts` and passed through Trystero's `rtcPolyfill`. Both SDP and trickle ICE must remain filtered. Do not add STUN, TURN, public-address fallback, or an internet-audio toggle.
 - A browser cannot verify an SSID. Describe this as local reachability, with the documented routed-network/VPN caveat.
-- Only the elected host publishes authoritative room state. Preserve the original Everyone/Admins permissions and admin promotions; permitted listeners request actions through the host. Transport peer IDs bind incoming requests to registered sessions; never trust identity fields supplied inside an envelope.
+- Only the elected host publishes authoritative room state. Every newly joined participant is an admin by default, with Everyone playback controls. Preserve later explicit Everyone/Admins choices and admin changes; permitted listeners request actions through the host. Transport peer IDs bind incoming requests to registered sessions; never trust identity fields supplied inside an envelope.
 - Listen to the host's clock. Only the host advances the queue when a track ends.
 - Track files use `p2p://` IDs and IndexedDB. Transfer the current/next file on demand, deduplicate requests, and cancel pending work on detach. Never repeatedly broadcast whole playlists' files.
 - Stale listener caches must not overwrite an active host's queue. Keep the listener coordinator replica current so it can take over after host departure.

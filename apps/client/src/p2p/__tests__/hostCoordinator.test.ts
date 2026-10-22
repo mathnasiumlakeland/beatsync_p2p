@@ -31,9 +31,12 @@ function fixture() {
   return { room, messages, request };
 }
 describe("single authoritative playback coordinator", () => {
-  test("listeners cannot upload, reorder or change room volume", async () => {
+  test("explicitly demoted listeners cannot mutate an admin-only room", async () => {
     const { room, request, messages } = fixture();
     try {
+      await room.handleInitiatorRequest(request({ type: "SET_ADMIN", clientId: "listener-client", isAdmin: false }));
+      await room.handleInitiatorRequest(request({ type: "SET_PLAYBACK_CONTROLS", permissions: "ADMIN_ONLY" }));
+      messages.length = 0;
       await room.handleInitiatorRequest(
         request({ type: "REGISTER_AUDIO_SOURCE", source: { url: "p2p://one", name: "One.mp3" } }, "listener")
       );
@@ -301,9 +304,10 @@ describe("original BeatSync library and permissions", () => {
     }
   });
 
-  test("admin promotion survives presence updates and listeners cannot promote themselves", async () => {
+  test("explicit admin demotion is respected and promotion survives presence updates", async () => {
     const { room, request } = fixture();
     try {
+      await room.handleInitiatorRequest(request({ type: "SET_ADMIN", clientId: "listener-client", isAdmin: false }));
       await room.handleInitiatorRequest(
         request({ type: "SET_ADMIN", clientId: "listener-client", isAdmin: true }, "listener")
       );
@@ -348,4 +352,51 @@ describe("original BeatSync library and permissions", () => {
       replica.destroy();
     }
   });
+});
+
+test("new participants are admins and can upload, play and change permissions without promotion", async () => {
+  const { room, request, messages } = fixture();
+  try {
+    expect(room.exportSnapshot().playbackControlsPermissions).toBe("EVERYONE");
+    expect(room.getActiveClients().every((client) => client.isAdmin)).toBe(true);
+    await room.handleInitiatorRequest(
+      request({ type: "SET_PLAYBACK_CONTROLS", permissions: "ADMIN_ONLY" }, "listener")
+    );
+    expect(room.exportSnapshot().playbackControlsPermissions).toBe("ADMIN_ONLY");
+    await room.handleInitiatorRequest(
+      request({ type: "REGISTER_AUDIO_SOURCE", source: { url: "p2p://shared", name: "Shared.mp3" } }, "listener")
+    );
+    await room.handleInitiatorRequest(
+      request({ type: "PLAY", audioSource: "p2p://shared", trackTimeSeconds: 0 }, "listener")
+    );
+    room.handleRemoteAudioLoaded("host-client", "p2p://shared");
+    room.handleRemoteAudioLoaded("listener-client", "p2p://shared");
+    expect(
+      messages.some((message) => message.type === "SCHEDULED_ACTION" && message.scheduledAction.type === "PLAY")
+    ).toBe(true);
+  } finally {
+    room.destroy();
+  }
+});
+
+test("old host-only caches upgrade once while later explicit permission choices persist", () => {
+  const { room } = fixture();
+  try {
+    const snapshot = {
+      ...room.exportSnapshot(),
+      version: 1,
+      playbackControlsPermissions: "ADMIN_ONLY" as const,
+      audioSources: [{ url: "p2p://kept", name: "Keep me.mp3" }],
+    };
+    room.applySnapshot(snapshot);
+    expect(room.exportSnapshot()).toMatchObject({
+      version: 2,
+      playbackControlsPermissions: "EVERYONE",
+      audioSources: snapshot.audioSources,
+    });
+    room.applySnapshot({ ...snapshot, version: 2 });
+    expect(room.exportSnapshot().playbackControlsPermissions).toBe("ADMIN_ONLY");
+  } finally {
+    room.destroy();
+  }
 });

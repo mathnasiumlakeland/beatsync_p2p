@@ -68,7 +68,7 @@ export function saveRoomCache(roomCode: string, snapshot: RoomCacheSnapshot): vo
 
 export function createEmptyRoomCache(): RoomCacheSnapshot {
   return {
-    version: 1,
+    version: 2,
     updatedAt: 0,
     audioSources: [],
     playbackState: {
