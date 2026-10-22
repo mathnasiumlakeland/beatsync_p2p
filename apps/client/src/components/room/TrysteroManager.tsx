@@ -7,6 +7,7 @@ import { dispatchRoomMessage } from "@/lib/roomMessages";
 import { getTrysteroConfig } from "@/p2p/config";
 import { toTrysteroRoomId } from "@/p2p/constants";
 import { joinRoom } from "trystero";
+import { toast } from "sonner";
 import { useP2PConnectionStore } from "@/store/p2pConnection";
 import { useChatStore } from "@/store/chat";
 import { useGlobalStore } from "@/store/global";
@@ -149,12 +150,22 @@ export const TrysteroManager = ({ roomId, username }: TrysteroManagerProps) => {
     if (isLoadingRoom || !roomId || !username || !clientId) return;
 
     let activeRoom: ReturnType<typeof joinRoom>;
+    let reportedConnectionFailure = false;
     try {
       activeRoom = joinRoom(getTrysteroConfig(), trysteroRoomId, {
-        onJoinError: ({ error }) =>
-          useP2PConnectionStore.setState({
-            connectionError: `Could not connect locally. Check Wi-Fi and allow local network access. ${error}`,
-          }),
+        onJoinError: ({ error }) => {
+          console.warn("[P2P] Local peer connection failed", error);
+          const message = "Could not reach another device on the local network.";
+          useP2PConnectionStore.setState({ connectionError: message });
+          if (!reportedConnectionFailure) {
+            reportedConnectionFailure = true;
+            toast.error(message, {
+              id: "local-peer-connection",
+              description: "Use the same Wi-Fi, allow local network access for your browser, and check that the network allows devices to communicate.",
+              duration: 12000,
+            });
+          }
+        },
       });
     } catch (error) {
       useP2PConnectionStore.setState({
