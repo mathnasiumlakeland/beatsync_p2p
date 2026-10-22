@@ -71,10 +71,10 @@ The default build uses the domain root. To build for a GitHub repository URL ins
 
 The workflow `.github/workflows/deploy-pages.yml` follows the neighboring Mathnasium projects: Bun install, type checks, tests, static export, Pages artifact upload, and deployment on a push to `main` or manual dispatch.
 
-1. Push this folder to your GitHub repository. It is an independent Git repository with no remote configured; choose your destination repository. No push or hosted deployment is performed by the implementation.
+1. The repository is published at **https://github.com/mathnasiumlakeland/beatsync_p2p**. Future pushes to `main` deploy automatically.
 2. In **Settings → Pages**, choose **GitHub Actions** as the source.
 3. Set the custom domain to **javier.mathnasium.pro**.
-4. In your DNS provider, point `javier` with a CNAME to **mkieffer1107.github.io** (not a repository path). Remove any conflicting record for that name. If your DNS already routes this subdomain correctly, keep that setup.
+4. In your DNS provider, point `javier` with a CNAME to **mathnasiumlakeland.github.io** (not a repository path). Remove any conflicting record for that name. If your DNS already routes this subdomain correctly, keep that setup.
 5. Run the deployment workflow and enable **Enforce HTTPS** when GitHub finishes issuing its certificate.
 
 `apps/client/public/CNAME` is copied to `out/CNAME`. The workflow uses `configure-pages`'s `base_path`, so a configured custom domain builds at `/`. If you change Pages from a repository URL to the domain later, rerun the workflow to rebuild with the new path. `.nojekyll` preserves `_next/` assets. Old room links redirect to the one root room.
@@ -100,7 +100,7 @@ A fresh host restores its own playable browser cache. Once connected, the active
 - Closing the original host elected the remaining browser, retained the three-track queue and two-track default playlist, and allowed playback to resume. A final solo reload restored all three cached files and the playlist with playback paused.
 - Desktop at 1440×900 and mobile at 390×844 use the original UI. The mobile document width stayed at 390 pixels; track selection in the playlist editor worked at that size.
 
-These are browser tests on one Mac. Physical phones, speaker latency, the actual Wi-Fi router, and mobile background behavior still need a room test. GitHub Pages publication, DNS changes, and HTTPS provisioning have not been performed.
+These are browser tests on one Mac. Physical phones, speaker latency, the actual Wi-Fi router, and mobile background behavior still need a room test. The site was published on October 22, 2026 at **https://javier.mathnasium.pro**, with a DNS-only CNAME to `mathnasiumlakeland.github.io` and HTTPS enforcement. The latest native-browser verification on this Mac did not establish a peer connection: signaling succeeded, but no usable remote local address was resolved. Treat cross-device playback as unverified until tested on the intended Wi-Fi; the app now reports local connection failures through its existing notifications.
 
 ## Credits and license
 
